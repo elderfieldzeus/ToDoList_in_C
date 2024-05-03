@@ -464,10 +464,12 @@ void clearTask(FILE **fptr, List *head) {
     }
 
     //close before removing
-    fclose(backup);
     fclose(*fptr);
 
-    remove(backup_file);
+    if(num == '9' + 1) { //check if there is a need to remove and fclose last file
+        fclose(backup);
+        remove(backup_file);
+    }
     rename(filename, backup_file);
 
     *fptr = fopen(filename, "wb+");
