@@ -472,7 +472,7 @@ void clearTask(FILE *fptr, List *head) {
     *head = NULL;
 
     printf("\033[H\033[J");
-    printf("File has been cleared. Backup storage has been saved to ./files/%s.\n\n", backup_file);
+    printf("File has been cleared. Backup storage has been saved to %s.\n\n", backup_file);
 }
 
 void freeAll(List head) {
