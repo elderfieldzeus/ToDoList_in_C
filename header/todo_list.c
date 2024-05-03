@@ -70,36 +70,44 @@ void doChoice(Choice option, List *head) {
 } 
 
 void displayList(List head) {
-    printf("Your tasks:\n\n");
+    printf("\033[H\033[J");
     if(head != NULL) {
-        printf("%30s%19s%12s%12s", "Task", "Deadline", "Status", "Urgency\n");
+        printf("%-30s%-19s%-12s%-12s\n", "Task", "Deadline", "Status", "Urgency");
+
+        for(int i = 0; i < 73; i++) {
+            printf("-");
+        }
+
+        printf("\n");
+
         for(List curr = head; curr != NULL; curr = curr->next) {
-            char status[12], urgency[12];
+            char status[12], urgency[12] = "";
 
             switch(curr->task.status) {
-                case UNFINISHED: strcpy(status, "Not done"); break;
-                case PENDING: strcpy(status, "In progress"); break;
+                case UNFINISHED: strcpy(status, "Not Done"); break;
+                case PENDING: strcpy(status, "In Progress"); break;
                 case DONE: strcpy(status, "Done"); 
             }
 
             switch(curr->task.urgency) {
-                case NONE: strcpy(urgency, ""); break;
-                case LOW: strcpy(urgency, "Low"); break;
-                case MEDIUM: strcpy(urgency, "Medium");break;
-                case HIGH: strcpy(urgency, "High"); 
+                case LOW: strcpy(urgency, "LOW"); break;
+                case MEDIUM: strcpy(urgency, "MEDIUM");break;
+                case HIGH: strcpy(urgency, "HIGH");
             } 
 
-            if(curr->task.deadline.day == -1) {
-                printf("%30s%19s%12s%12s\n", curr->task.description, "", status, urgency);
+            char date[20] = "";
+
+            if(curr->task.deadline.day != -1) {
+                sprintf(date, "%s %02d, %4d", curr->task.deadline.month, curr->task.deadline.day, curr->task.deadline.year);
             }
-            else {
-                printf("%30s%10s %02d, %4d%12s%12s\n", curr->task.description, curr->task.deadline.month, curr->task.deadline.day, curr->task.deadline.year, status, urgency);
-            }
+    
+            printf("%-30s%-19s%-12s%-12s\n", curr->task.description, date, status, urgency);
         }
     }
     else {
         printf("No tasks are available. Add a task!\n");
-    }    
+    }
+    printf("\n\n");
 }
 
 int monthValid(char month[]) {
@@ -126,11 +134,35 @@ int dateValid(int month, int day) {
     return (day < monthDays[month - 1] && day > 0) ? 1 : 0;
 }
 
+void capitalize(char *sentence) {
+    sentence[0] = toupper(sentence[0]);
+    for(int i = 1; sentence[i] != '\0'; i++) {
+        if(isspace(sentence[i - 1])) {
+            sentence[i] = toupper(sentence[i]);
+        }
+        else {
+            sentence[i] = tolower(sentence[i]);
+        }
+    }
+}
+
 Task createTask() {
-    Task temp = {"xxxx", {"x", -1, -1}, UNFINISHED, NONE};
+    Task temp = {"xxxx", {"x", -1, -1, 10000}, UNFINISHED, NONE};
     char yorn;
-    printf("Enter new task: ");
-    scanf(" %[^\n]", temp.description);
+    char desc[100];
+    int length;
+
+    printf("\033[H\033[J");
+    do{
+        printf("Enter new task: ");
+        scanf(" %[^\n]", desc);
+        if((length = strlen(desc) + 1) >= MAX) {
+            printf("Task exceeds maximum of %d letters.\n", MAX - 1);
+        }
+    }while(length >= MAX);
+
+    strcpy(temp.description, desc);
+    capitalize(temp.description);
     printf("Is there a deadline? [y/n]: ");
     scanf(" %c", &yorn);
 
@@ -157,7 +189,7 @@ Task createTask() {
         do {
             printf("Enter year: ");
             scanf("%d", &year);
-        } while(year <= 0);
+        } while(year <= 0 && year >= 10000);
 
         temp.deadline.year = year;
     }
@@ -165,17 +197,17 @@ Task createTask() {
     int urgency;
 
     printf("How urgent is this?\n");
-    printf("[1] Low\n");
+    printf("[1] High\n");
     printf("[2] Medium\n");
-    printf("[3] High\n");
+    printf("[3] Low\n");
     printf("[?] None\n");
     printf("Urgency: ");
     scanf("%d", &urgency);
 
     switch(urgency) {
-        case 1: temp.urgency = LOW; break;
+        case 1: temp.urgency = HIGH; break;
         case 2: temp.urgency = MEDIUM; break;
-        case 3: temp.urgency = HIGH; break;
+        case 3: temp.urgency = LOW; break;
         default: temp.urgency = NONE;
     }
 
@@ -189,8 +221,11 @@ void addToList(List *head) {
     List temp = (List) malloc(sizeof(struct node));
 
     if(temp != NULL) {
-        for(curr = head; (*curr) != NULL && new_task.urgency > (*curr)->task.urgency; curr = &(*curr)->next) {} //find urgency
-        for(; (*curr) != NULL && strcmp(new_task.description, (*curr)->task.description) > 0 && new_task.urgency == (*curr)->task.urgency; curr = &(*curr)->next) {} //find sorted arrangement amongst
+        for(curr = head; (*curr) != NULL && new_task.urgency < (*curr)->task.urgency; curr = &(*curr)->next) {}
+        for(; (*curr) != NULL && new_task.deadline.year > (*curr)->task.deadline.year && new_task.urgency == (*curr)->task.urgency; curr = &(*curr)->next) {} //find proper year
+        for(; (*curr) != NULL && new_task.deadline.month_in_num > (*curr)->task.deadline.month_in_num && new_task.deadline.year > (*curr)->task.deadline.year && new_task.urgency == (*curr)->task.urgency; curr = &(*curr)->next) {} //find proper month
+        for(; (*curr) != NULL && new_task.deadline.day > (*curr)->task.deadline.day && new_task.deadline.year > (*curr)->task.deadline.year && new_task.urgency == (*curr)->task.urgency && new_task.deadline.month_in_num == (*curr)->task.deadline.month_in_num; curr = &(*curr)->next) {} //find proper date
+        
         temp->task = new_task;
         temp->next = *curr;
         *curr = temp;

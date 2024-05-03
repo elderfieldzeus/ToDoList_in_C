@@ -1,7 +1,7 @@
 #ifndef TODO_HEADER
 #define TODO_HEADER
 
-#define MAX 30
+#define MAX 31 //including '\0'
 
 #include <stdio.h>
 #include <stdlib.h>
