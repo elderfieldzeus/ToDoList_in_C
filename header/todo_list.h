@@ -49,7 +49,7 @@ typedef struct node {
 FILE *openFile();
 List getList(FILE *fptr);
 Choice landingScreen();
-void doChoice(Choice option, List *head, FILE *file);
+void doChoice(Choice option, List *head, FILE **file);
 void displayList(List head);
 int monthValid(char month[]);
 int dateValid(int month, int day);
@@ -63,9 +63,9 @@ void editDeadline(List edit);
 void editPriority(List edit);
 void editStatus(List head);
 void deleteFromList(List *head);
-void clearTask(FILE *fptr, List *head);
+void clearTask(FILE **fptr, List *head);
 void freeAll(List head);
-void saveToFile(FILE *fptr, List head);
+void saveToFile(FILE **fptr, List head);
 void endProgram(FILE *fptr, List head);
 
 #endif

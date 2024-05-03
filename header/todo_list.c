@@ -10,6 +10,7 @@ FILE *openFile() {
         // printf("New File has been made!");
     }
     else {
+        fclose(fptr);
         fptr = fopen(filename, "ab+");
     }
     
@@ -66,7 +67,7 @@ Choice landingScreen() {
     return option;
 }
 
-void doChoice(Choice option, List *head, FILE *file) {
+void doChoice(Choice option, List *head, FILE **file) {
     switch(option) {
         case READ: displayList(*head); break;
         case ADD: addToList(head); break;
@@ -448,7 +449,7 @@ void deleteFromList(List *head) {
 
 }
 
-void clearTask(FILE *fptr, List *head) {
+void clearTask(FILE **fptr, List *head) {
     saveToFile(fptr, *head); //save file first
 
     FILE *backup;
@@ -457,15 +458,19 @@ void clearTask(FILE *fptr, List *head) {
     char num = '0';
 
     while((backup = fopen(backup_file, "rb+")) != NULL && num < '9') {
+        fclose(backup);
         num = backup_file[last_index] + 1;
         backup_file[last_index] = num;
     }
 
+    //close before removing
+    fclose(backup);
+    fclose(*fptr);
+
     remove(backup_file);
     rename(filename, backup_file);
-    fclose(fptr);
 
-    fptr = fopen(filename, "wb+");
+    *fptr = fopen(filename, "wb+");
 
     freeAll(*head);
 
@@ -483,18 +488,22 @@ void freeAll(List head) {
     }
 }
 
-void saveToFile(FILE *fptr, List head) {
-    FILE *new_file = fopen("./files/temp", "wb+");
+void saveToFile(FILE **fptr, List head) {
+    FILE *new_file = fopen("./files/temp.dat", "wb+");
 
     while(head != NULL) {
         fwrite(&(head)->task, sizeof(Task), 1, new_file);
         head = head->next;
     }
 
-    remove(filename);
-    rename("./files/temp", filename);
+    //close before removing
+    fclose(new_file); 
+    fclose(*fptr);
 
-    fptr = new_file;
+    remove(filename);
+    rename("./files/temp.dat", filename);
+
+    *fptr = fopen(filename, "ab+");
 }
 
 void endProgram(FILE *fptr, List head) {
