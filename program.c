@@ -6,10 +6,10 @@ int main() {
     Choice option = landingScreen();
     
     while(option != EXIT) {
-        doChoice(option, &head);
+        doChoice(option, &head, file);
         option = landingScreen();
     } 
-    
+
     saveToFile(file, head);
     endProgram(file, head);
     return 0;

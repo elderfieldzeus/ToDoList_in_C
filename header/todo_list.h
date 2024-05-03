@@ -14,7 +14,7 @@
 typedef char Sentence[MAX];
 
 typedef enum {
-    READ, ADD, UPDATE, DELETE, EXIT
+    READ, ADD, UPDATE, DELETE, EDIT, CLEAR, EXIT
 } Choice;
 
 typedef enum {
@@ -49,7 +49,7 @@ typedef struct node {
 FILE *openFile();
 List getList(FILE *fptr);
 Choice landingScreen();
-void doChoice(Choice option, List *head);
+void doChoice(Choice option, List *head, FILE *file);
 void displayList(List head);
 int monthValid(char month[]);
 int dateValid(int month, int day);
@@ -57,7 +57,14 @@ Task createTask();
 void addToList(List *head);
 List findToBeEdited(List head, Sentence find);
 void updateStatus(List head);
+void editTask(List head);
+void editDescription(List edit);
+void editDeadline(List edit);
+void editPriority(List edit);
+void editStatus(List head);
 void deleteFromList(List *head);
+void clearTask(FILE *fptr, List *head);
+void freeAll(List head);
 void saveToFile(FILE *fptr, List head);
 void endProgram(FILE *fptr, List head);
 

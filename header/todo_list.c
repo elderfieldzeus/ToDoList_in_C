@@ -43,8 +43,10 @@ Choice landingScreen() {
     printf("Welcome to your to-do list (DONT FORGET TO SAVE BEFORE EXITING)\n");
     printf("[1] Read Task/s\n");
     printf("[2] Add Task\n");
-    printf("[3] Update Task Status\n");
-    printf("[4] Delete Task\n");
+    printf("[3] Update Status\n");
+    printf("[4] Edit Details\n");
+    printf("[5] Delete Task\n");
+    printf("[6] Clear All\n");
     printf("[?] Save & Exit\n");
     printf("Enter choice: ");
     scanf("%d", &choice);
@@ -53,19 +55,23 @@ Choice landingScreen() {
         case 1: option = READ; break;
         case 2: option = ADD; break;
         case 3: option = UPDATE; break;
-        case 4: option = DELETE; break;
+        case 4: option = EDIT; break;
+        case 5: option = DELETE; break;
+        case 6: option = CLEAR; break;
         default: option = EXIT; 
     } 
 
     return option;
 }
 
-void doChoice(Choice option, List *head) {
+void doChoice(Choice option, List *head, FILE *file) {
     switch(option) {
         case READ: displayList(*head); break;
         case ADD: addToList(head); break;
         case UPDATE: updateStatus(*head); break;
+        case EDIT: editTask(*head); break;
         case DELETE: deleteFromList(head); break;
+        case CLEAR: clearTask(file, head); break;
     }
 } 
 
@@ -97,7 +103,7 @@ void displayList(List head) {
 
             char date[20] = "";
 
-            if(curr->task.deadline.day != -1) {
+            if(curr->task.deadline.month_in_num != -1) {
                 sprintf(date, "%s %02d, %4d", curr->task.deadline.month, curr->task.deadline.day, curr->task.deadline.year);
             }
     
@@ -260,23 +266,151 @@ void updateStatus(List head) {
         printf("Couldn't find task with that description.\n\n");
     }
     else {
+        editStatus(edit);
+    }
+}
+
+void editTask(List head) {
+    List edit;
+    Sentence find;
+
+    printf("\033[H\033[J");
+    printf("Enter task to be edited: ");
+    scanf(" %[^\n]", find);
+    capitalize(find);
+
+    edit = findToBeEdited(head, find);
+    if(edit == NULL) {
+        printf("Couldn't find task with that description.\n\n");
+    }
+    else {
         int choice;
+
         printf("\033[H\033[J");
-        printf("What would you like to change the status to?\n");
-        printf("[1] Not Done\n");
-        printf("[2] In Progress\n");
-        printf("[3] Done\n");
+        printf("Enter area to edit:\n\n");
+        printf("[1] Description\n");
+        printf("[2] Deadline\n");
+        printf("[3] Status\n");
+        printf("[4] Priority\n");
         printf("Choice: ");
         scanf("%d", &choice);
 
-        printf("\033[H\033[J");
-
         switch(choice) {
-            case 1: edit->task.status = UNFINISHED; break;
-            case 2: edit->task.status = PENDING; break;
-            case 3: edit->task.status = DONE; break;
-            case 4: printf("Not an option.\n\n");
+            case 1: editDescription(edit); break;
+            case 2: editDeadline(edit); break;
+            case 3: editStatus(edit); break;
+            case 4: editPriority(edit); break;
         }
+
+    }
+}
+
+void editDescription(List edit) {
+    char desc[100];
+    int length;
+
+    printf("\033[H\033[J");
+    do{
+        printf("New task description: ");
+        scanf(" %[^\n]", desc);
+        if((length = strlen(desc) + 1) >= MAX) {
+            printf("Task exceeds maximum of %d letters.\n", MAX - 1);
+        }
+    }while(length >= MAX);
+
+    capitalize(desc);
+    strcpy(edit->task.description, desc);
+
+    printf("\033[H\033[J");
+    printf("Task description successfully edited to \"%s\"\n\n", edit->task.description);
+}
+
+void editDeadline(List edit) {
+    char month[10];
+    int mNum;
+    printf("\033[H\033[J");
+    printf("New deadline:\n\n");
+    do{
+        printf("Enter month: ");
+        scanf(" %s", month);
+    }while((mNum = monthValid(month)) == 0);
+
+    strcpy(edit->task.deadline.month, month);
+    edit->task.deadline.month_in_num = mNum;
+
+    int day;
+    do {
+        printf("Enter day: ");
+        scanf("%d", &day);
+    }while (dateValid(mNum, day) == 0);
+
+    edit->task.deadline.day = day;
+
+    int year;
+    do {
+        printf("Enter year: ");
+        scanf("%d", &year);
+    } while(year <= 0 && year >= 10000);
+
+    edit->task.deadline.year = year;
+
+    char date[20] = "";
+
+    if(edit->task.deadline.month_in_num != -1) {
+        sprintf(date, "%s %02d, %4d", edit->task.deadline.month, edit->task.deadline.day, edit->task.deadline.year);
+    }
+
+    printf("\033[H\033[J");
+    printf("Task deadline successfully edited to \"%s\"\n\n", date);
+}
+
+void editPriority(List edit) {
+    int urgency;
+
+    printf("\033[H\033[J");
+    printf("How much of a priority is this?\n");
+    printf("[1] High\n");
+    printf("[2] Medium\n");
+    printf("[3] Low\n");
+    printf("[?] None\n");
+    printf("Urgency: ");
+    scanf("%d", &urgency);
+
+    switch(urgency) {
+        case 1: edit->task.priority = HIGH; break;
+        case 2: edit->task.priority = MEDIUM; break;
+        case 3: edit->task.priority = LOW; break;
+        default: edit->task.priority = NONE;
+    }
+
+    printf("\033[H\033[J");
+    printf("Priority edited to ");
+    switch(urgency) {
+        case 1: printf("HIGH"); break;
+        case 2: printf("MEDIUM"); break;
+        case 3: printf("LOW"); break;
+        default: printf("NONE"); 
+    }
+    printf("\n\n");
+}
+
+void editStatus(List edit) {
+    int choice;
+    printf("\033[H\033[J");
+    printf("What would you like to change the status to?\n");
+    printf("[1] Not Done\n");
+    printf("[2] In Progress\n");
+    printf("[3] Done\n");
+    printf("Choice: ");
+    scanf("%d", &choice);
+
+    printf("\033[H\033[J");
+
+    switch(choice) {
+        case 1: edit->task.status = UNFINISHED; break;
+        case 2: edit->task.status = PENDING; break;
+        case 3: edit->task.status = DONE; break;
+        case 4: printf("Not an option.\n\n");
     }
 }
 
@@ -312,8 +446,40 @@ void deleteFromList(List *head) {
 
 }
 
+void clearTask(FILE *fptr, List *head) {
+    saveToFile(fptr, *head); //save file first
 
+    FILE *backup;
+    char backup_file[20] = "./files/backup0.dat";
+    int last_index = 14;
+    char num = '0';
 
+    while((backup = fopen(backup_file, "rb+")) != NULL && num < '9') {
+        num = backup_file[last_index] + 1;
+        backup_file[last_index] = num;
+    }
+
+    remove(backup_file);
+    rename(filename, backup_file);
+    fclose(fptr);
+
+    fptr = fopen(filename, "wb+");
+
+    freeAll(*head);
+
+    *head = NULL;
+
+    printf("\033[H\033[J");
+    printf("File has been cleared. Backup storage has been saved to ./files/%s.\n\n", backup_file);
+}
+
+void freeAll(List head) {
+    while(head != NULL) {
+        List prev = head;
+        head = head->next;
+        free(prev);
+    }
+}
 
 void saveToFile(FILE *fptr, List head) {
     FILE *new_file = fopen("./files/temp", "wb+");
@@ -330,13 +496,7 @@ void saveToFile(FILE *fptr, List head) {
 }
 
 void endProgram(FILE *fptr, List head) {
-    List prev;
-    while(head != NULL) {
-        prev = head;
-        head = head->next;
-        free(prev);
-    }
-
+    freeAll(head);
     fclose(fptr);
 
     printf("\033[H\033[J");
