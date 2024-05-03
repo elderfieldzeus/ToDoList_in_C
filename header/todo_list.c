@@ -43,7 +43,7 @@ Choice landingScreen() {
     printf("Welcome to your to-do list (DONT FORGET TO SAVE BEFORE EXITING)\n");
     printf("[1] Read Task/s\n");
     printf("[2] Add Task\n");
-    printf("[3] Update Task\n");
+    printf("[3] Update Task Status\n");
     printf("[4] Delete Task\n");
     printf("[?] Save & Exit\n");
     printf("Enter choice: ");
@@ -64,15 +64,15 @@ void doChoice(Choice option, List *head) {
     switch(option) {
         case READ: displayList(*head); break;
         case ADD: addToList(head); break;
-        case UPDATE: break;
-        case DELETE: break;
+        case UPDATE: updateStatus(*head); break;
+        case DELETE: deleteFromList(head); break;
     }
 } 
 
 void displayList(List head) {
     printf("\033[H\033[J");
     if(head != NULL) {
-        printf("%-30s%-19s%-12s%-12s\n", "Task", "Deadline", "Status", "Urgency");
+        printf("%-30s%-19s%-15s%-12s\n", "Task", "Deadline", "Status", "Priority");
 
         for(int i = 0; i < 73; i++) {
             printf("-");
@@ -89,7 +89,7 @@ void displayList(List head) {
                 case DONE: strcpy(status, "Done"); 
             }
 
-            switch(curr->task.urgency) {
+            switch(curr->task.priority) {
                 case LOW: strcpy(urgency, "LOW"); break;
                 case MEDIUM: strcpy(urgency, "MEDIUM");break;
                 case HIGH: strcpy(urgency, "HIGH");
@@ -101,7 +101,7 @@ void displayList(List head) {
                 sprintf(date, "%s %02d, %4d", curr->task.deadline.month, curr->task.deadline.day, curr->task.deadline.year);
             }
     
-            printf("%-30s%-19s%-12s%-12s\n", curr->task.description, date, status, urgency);
+            printf("%-30s%-19s%-15s%-12s\n", curr->task.description, date, status, urgency);
         }
     }
     else {
@@ -163,12 +163,16 @@ Task createTask() {
 
     strcpy(temp.description, desc);
     capitalize(temp.description);
+
+    printf("\033[H\033[J");
     printf("Is there a deadline? [y/n]: ");
     scanf(" %c", &yorn);
 
     if(tolower(yorn) == 'y') {
         char month[10];
         int mNum;
+        printf("\033[H\033[J");
+        printf("Deadline:\n\n");
         do{
             printf("Enter month: ");
             scanf(" %s", month);
@@ -196,7 +200,8 @@ Task createTask() {
 
     int urgency;
 
-    printf("How urgent is this?\n");
+    printf("\033[H\033[J");
+    printf("How much of a priority is this?\n");
     printf("[1] High\n");
     printf("[2] Medium\n");
     printf("[3] Low\n");
@@ -205,11 +210,13 @@ Task createTask() {
     scanf("%d", &urgency);
 
     switch(urgency) {
-        case 1: temp.urgency = HIGH; break;
-        case 2: temp.urgency = MEDIUM; break;
-        case 3: temp.urgency = LOW; break;
-        default: temp.urgency = NONE;
+        case 1: temp.priority = HIGH; break;
+        case 2: temp.priority = MEDIUM; break;
+        case 3: temp.priority = LOW; break;
+        default: temp.priority = NONE;
     }
+
+    printf("\033[H\033[J");
 
     return temp;
 }
@@ -221,16 +228,92 @@ void addToList(List *head) {
     List temp = (List) malloc(sizeof(struct node));
 
     if(temp != NULL) {
-        for(curr = head; (*curr) != NULL && new_task.urgency < (*curr)->task.urgency; curr = &(*curr)->next) {}
-        for(; (*curr) != NULL && new_task.deadline.year > (*curr)->task.deadline.year && new_task.urgency == (*curr)->task.urgency; curr = &(*curr)->next) {} //find proper year
-        for(; (*curr) != NULL && new_task.deadline.month_in_num > (*curr)->task.deadline.month_in_num && new_task.deadline.year > (*curr)->task.deadline.year && new_task.urgency == (*curr)->task.urgency; curr = &(*curr)->next) {} //find proper month
-        for(; (*curr) != NULL && new_task.deadline.day > (*curr)->task.deadline.day && new_task.deadline.year > (*curr)->task.deadline.year && new_task.urgency == (*curr)->task.urgency && new_task.deadline.month_in_num == (*curr)->task.deadline.month_in_num; curr = &(*curr)->next) {} //find proper date
+        for(curr = head; (*curr) != NULL && new_task.priority < (*curr)->task.priority; curr = &(*curr)->next) {}
+        for(; (*curr) != NULL && new_task.deadline.year > (*curr)->task.deadline.year && new_task.priority == (*curr)->task.priority; curr = &(*curr)->next) {} //find proper year
+        for(; (*curr) != NULL && new_task.deadline.month_in_num > (*curr)->task.deadline.month_in_num && new_task.deadline.year > (*curr)->task.deadline.year && new_task.priority == (*curr)->task.priority; curr = &(*curr)->next) {} //find proper month
+        for(; (*curr) != NULL && new_task.deadline.day > (*curr)->task.deadline.day && new_task.deadline.year > (*curr)->task.deadline.year && new_task.priority == (*curr)->task.priority && new_task.deadline.month_in_num == (*curr)->task.deadline.month_in_num; curr = &(*curr)->next) {} //find proper date
         
         temp->task = new_task;
         temp->next = *curr;
         *curr = temp;
     } 
 }
+
+List findToBeEdited(List head, Sentence find) {
+    List curr;
+    for(curr = head; curr != NULL && strcmp(curr->task.description, find) != 0; curr = curr->next) {}
+
+    return curr;
+}
+
+void updateStatus(List head) {
+    List edit;
+    Sentence find;
+
+    printf("\033[H\033[J");
+    printf("Enter task to be updated: ");
+    scanf(" %[^\n]", find);
+    capitalize(find);
+
+    edit = findToBeEdited(head, find);
+    if(edit == NULL) {
+        printf("Couldn't find task with that description.\n\n");
+    }
+    else {
+        int choice;
+        printf("\033[H\033[J");
+        printf("What would you like to change the status to?\n");
+        printf("[1] Not Done\n");
+        printf("[2] In Progress\n");
+        printf("[3] Done\n");
+        printf("Choice: ");
+        scanf("%d", &choice);
+
+        printf("\033[H\033[J");
+
+        switch(choice) {
+            case 1: edit->task.status = UNFINISHED; break;
+            case 2: edit->task.status = PENDING; break;
+            case 3: edit->task.status = DONE; break;
+            case 4: printf("Not an option.\n\n");
+        }
+    }
+}
+
+void deleteFromList(List *head) {
+    Sentence delete;
+    printf("\033[H\033[J");
+    printf("Enter task to be deleted: ");
+    scanf(" %[^\n]", delete);
+
+    capitalize(delete);
+
+    List *curr = head, temp;
+    int deleted = 0;
+
+    while(*curr != NULL) {
+        if(strcmp((*curr)->task.description, delete) == 0) {
+        temp = *curr;
+        *curr = temp->next;
+        free(temp);
+        deleted = 1;
+        }
+        else {
+            curr = &(*curr)->next;
+        }
+    }
+
+    if(deleted == 1) {
+        printf("Deleted.\n\n");
+    }
+    else {
+        printf("Couldn't find task with that description.\n\n");
+    }
+
+}
+
+
+
 
 void saveToFile(FILE *fptr, List head) {
     FILE *new_file = fopen("./files/temp", "wb+");
@@ -255,4 +338,8 @@ void endProgram(FILE *fptr, List head) {
     }
 
     fclose(fptr);
+
+    printf("\033[H\033[J");
+    printf("Thanks for using my version of To-do list.\n\n");
+    printf("\u00A9 Zeus D. Elderfield\n\n");
 }

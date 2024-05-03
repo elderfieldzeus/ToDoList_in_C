@@ -9,7 +9,7 @@ int main() {
         doChoice(option, &head);
         option = landingScreen();
     } 
-
+    
     saveToFile(file, head);
     endProgram(file, head);
     return 0;

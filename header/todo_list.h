@@ -36,7 +36,7 @@ typedef struct {
     Sentence description;
     Date deadline; // 00/00/0000
     Status status;
-    Importance urgency;
+    Importance priority;
 } Task;
 
 typedef struct node {
@@ -55,6 +55,9 @@ int monthValid(char month[]);
 int dateValid(int month, int day);
 Task createTask();
 void addToList(List *head);
+List findToBeEdited(List head, Sentence find);
+void updateStatus(List head);
+void deleteFromList(List *head);
 void saveToFile(FILE *fptr, List head);
 void endProgram(FILE *fptr, List head);
 
