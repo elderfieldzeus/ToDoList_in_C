@@ -1,3 +1,4 @@
 .vscode
-./files/tasks.dat
+tasks.dat
 test.c
+a.out
