@@ -13,6 +13,8 @@ FILE *openFile() {
         fptr = fopen(filename, "ab+");
     }
     
+    printf("\033[H\033[J");
+
     return fptr;
 }
 
