@@ -267,17 +267,19 @@ void typeOfSorting(List head) {
     char *sort = "";
 
     switch(choice) {
-        case 1: sortByDate(head); sort = "date"; break;
-        case 2: sortByPriority(head); sort = "priority"; break;
+        case 1: sortByDate(head); sort = "DATE"; break;
+        case 2: sortByPriority(head); sort = "PRIORITY"; break;
     }
 
     printf("\033[H\033[J");
     if(choice == 1 || choice == 2) {
+        displayList(head);
         printf("List sorted by %s.\n\n", sort);
     }
     else {
         printf("Invalid input.\n\n");
     }
+    
 }
 
 int compareDate(List curr, List key) {
