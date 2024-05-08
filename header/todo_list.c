@@ -46,8 +46,8 @@ Choice landingScreen() {
     printf("Welcome to your to-do list (DONT FORGET TO SAVE BEFORE EXITING)\n");
     printf("[1] Read Task/s\n");
     printf("[2] Add Task\n");
-    printf("[3] Update Status\n");
-    printf("[4] Edit Details\n");
+    printf("[3] Sort Task/s\n");
+    printf("[4] Edit Task\n");
     printf("[5] Delete Task\n");
     printf("[6] Clear All\n");
     printf("[?] Save & Exit\n");
@@ -57,7 +57,7 @@ Choice landingScreen() {
     switch(choice) {
         case 1: option = READ; break;
         case 2: option = ADD; break;
-        case 3: option = UPDATE; break;
+        case 3: option = SORT; break;
         case 4: option = EDIT; break;
         case 5: option = DELETE; break;
         case 6: option = CLEAR; break;
@@ -71,7 +71,7 @@ void doChoice(Choice option, List *head, FILE **file) {
     switch(option) {
         case READ: displayList(*head); break;
         case ADD: addToList(head); break;
-        case UPDATE: updateStatus(*head); break;
+        case SORT: typeOfSorting(*head); break;
         case EDIT: editTask(*head); break;
         case DELETE: deleteFromList(head); break;
         case CLEAR: clearTask(file, head); break;
@@ -140,7 +140,7 @@ int monthValid(char month[]) {
 
 int dateValid(int month, int day) {
     int monthDays[12] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    return (day < monthDays[month - 1] && day > 0) ? 1 : 0;
+    return (day <= monthDays[month - 1] && day > 0) ? 1 : 0;
 }
 
 void capitalize(char *sentence) {
@@ -255,23 +255,104 @@ List findToBeEdited(List head, Sentence find) {
     return curr;
 }
 
-void updateStatus(List head) {
-    List edit;
-    Sentence find;
+void typeOfSorting(List head) {
+    int choice;
+    printf("\033[H\033[J");
+    printf("Sort by:\n");
+    printf("[1] Date\n");
+    printf("[2] Priority\n");
+    printf("Choice: ");
+    scanf("%d", &choice);
+
+    char *sort = "";
+
+    switch(choice) {
+        case 1: sortByDate(head); sort = "date"; break;
+        case 2: sortByPriority(head); sort = "priority"; break;
+    }
 
     printf("\033[H\033[J");
-    printf("Enter task to be updated: ");
-    scanf(" %[^\n]", find);
-    capitalize(find);
-
-    edit = findToBeEdited(head, find);
-    if(edit == NULL) {
-        printf("Couldn't find task with that description.\n\n");
+    if(choice == 1 || choice == 2) {
+        printf("List sorted by %s.\n\n", sort);
     }
     else {
-        editStatus(edit);
+        printf("Invalid input.\n\n");
     }
 }
+
+int compareDate(List curr, List key) {
+    int isLesser = 0;
+    if(curr->task.deadline.year < key->task.deadline.year) {
+        isLesser = 1;
+    }
+    else if(curr->task.deadline.year == key->task.deadline.year) {
+        if(curr->task.deadline.month_in_num < curr->task.deadline.month_in_num) {
+            isLesser = 1;
+        }
+        else if(curr->task.deadline.month_in_num == curr->task.deadline.month_in_num
+        && curr->task.deadline.day < curr->task.deadline.month_in_num) {
+            isLesser = 1;
+        }
+    }
+
+    return isLesser;
+}
+
+void sortByDate(List head) {
+    for (List t = head; t != NULL; t = t->next) {
+        List key = t;
+        for(List curr = t->next; curr != NULL; curr = curr->next) {
+            if(compareDate(curr, key) == 1) {
+                key = curr;
+            }
+        }
+
+        if(key != t) {
+            Task temp = key->task;
+            key->task = t->task;
+            t->task = temp;
+        }
+    }
+}
+
+void sortByPriority(List head) {
+    for (List t = head; t != NULL; t = t->next) {
+        List key = t;
+        for(List curr = t->next; curr != NULL; curr = curr->next) {
+            if(curr->task.priority > key->task.priority) {
+                key = curr;
+            }
+            else if(curr->task.priority == key->task.priority && compareDate(curr, key) == 1) {
+                key = curr;
+            }
+        }
+
+        if(key != t) {
+            Task temp = key->task;
+            key->task = t->task;
+            t->task = temp;
+        }
+    }
+}
+
+// replaced with Sort
+// void updateStatus(List head) {
+//     List edit;
+//     Sentence find;
+
+//     printf("\033[H\033[J");
+//     printf("Enter task to be updated: ");
+//     scanf(" %[^\n]", find);
+//     capitalize(find);
+
+//     edit = findToBeEdited(head, find);
+//     if(edit == NULL) {
+//         printf("Couldn't find task with that description.\n\n");
+//     }
+//     else {
+//         editStatus(edit);
+//     }
+// }
 
 void editTask(List head) {
     List edit;

@@ -14,7 +14,7 @@
 typedef char Sentence[MAX];
 
 typedef enum {
-    READ, ADD, UPDATE, DELETE, EDIT, CLEAR, EXIT
+    READ, ADD, SORT, DELETE, EDIT, CLEAR, EXIT
 } Choice;
 
 typedef enum {
@@ -56,7 +56,11 @@ int dateValid(int month, int day);
 Task createTask();
 void addToList(List *head);
 List findToBeEdited(List head, Sentence find);
-void updateStatus(List head);
+void typeOfSorting(List head);
+int compareDate(List curr, List key);
+void sortByDate(List head);
+void sortByPriority(List head);
+//void updateStatus(List head);
 void editTask(List head);
 void editDescription(List edit);
 void editDeadline(List edit);
