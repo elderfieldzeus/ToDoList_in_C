@@ -575,6 +575,8 @@ void freeAll(List head) {
 void saveToFile(FILE **fptr, List head) {
     FILE *new_file = fopen("./files/temp.dat", "wb+");
 
+    sortByPriority(head); // set to its standard arrangement (priority)
+
     while(head != NULL) {
         fwrite(&(head)->task, sizeof(Task), 1, new_file);
         head = head->next;
