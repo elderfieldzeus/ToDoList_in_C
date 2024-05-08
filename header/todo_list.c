@@ -286,11 +286,11 @@ int compareDate(List curr, List key) {
         isLesser = 1;
     }
     else if(curr->task.deadline.year == key->task.deadline.year) {
-        if(curr->task.deadline.month_in_num < curr->task.deadline.month_in_num) {
+        if(curr->task.deadline.month_in_num < key->task.deadline.month_in_num) {
             isLesser = 1;
         }
-        else if(curr->task.deadline.month_in_num == curr->task.deadline.month_in_num
-        && curr->task.deadline.day < curr->task.deadline.month_in_num) {
+        else if(curr->task.deadline.month_in_num == key->task.deadline.month_in_num
+        && curr->task.deadline.day < key->task.deadline.day) {
             isLesser = 1;
         }
     }
@@ -303,6 +303,7 @@ void sortByDate(List head) {
         List key = t;
         for(List curr = t->next; curr != NULL; curr = curr->next) {
             if(compareDate(curr, key) == 1) {
+
                 key = curr;
             }
         }
